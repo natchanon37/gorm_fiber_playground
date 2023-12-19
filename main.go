@@ -125,5 +125,22 @@ func main() {
 		})
 	})
 
+	app.Delete("/books/:id", func(c *fiber.Ctx) error {
+		//Get id from url params
+		id, err := strconv.Atoi(c.Params("id"))
+		if err != nil {
+			return c.SendStatus(fiber.StatusBadRequest)
+		}
+
+		//Delete book
+		err = models.DeleteBookbyID(db, uint(id))
+		if err != nil {
+			return c.SendStatus(fiber.StatusBadRequest)
+		}
+		return c.JSON(fiber.Map{
+			"message": "Deleted successfully",
+		})
+	})
+
 	app.Listen(":8080")
 }

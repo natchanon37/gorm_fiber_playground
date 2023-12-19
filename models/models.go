@@ -51,3 +51,12 @@ func UpdateBookByID(db *gorm.DB, book *Book) error {
 	}
 	return nil
 }
+
+func DeleteBookbyID(db *gorm.DB, id uint) error {
+	result := db.Delete(&Book{}, id)
+	if result.Error != nil {
+		log.Fatalf("Error deleting book: %v", result.Error)
+		return result.Error
+	}
+	return nil
+}
