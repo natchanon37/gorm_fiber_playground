@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"gorm/middleware"
 	"gorm/models"
 	"log"
 	"os"
@@ -64,10 +65,13 @@ func main() {
 		fmt.Printf("Error: %#v", err)
 	}
 
-	db.AutoMigrate(&models.Book{})
+	db.AutoMigrate(&models.Book{}, &models.User{})
 	fmt.Println("Database migrated")
 
 	app := fiber.New()
+	//Middleware
+	app.Use("/books", middleware.AuthMiddleware)
+
 	//GetBook
 	app.Get("/books", func(c *fiber.Ctx) error {
 		return c.JSON(models.GetBooks(db))
@@ -139,6 +143,46 @@ func main() {
 		}
 		return c.JSON(fiber.Map{
 			"message": "Deleted successfully",
+		})
+	})
+
+	//User API
+	app.Post("/register", func(c *fiber.Ctx) error {
+		user := new(models.User)
+		if err := c.BodyParser(user); err != nil {
+			return c.SendStatus(fiber.StatusBadRequest)
+		}
+		err = models.CreateUser(db, user)
+		if err != nil {
+			return c.SendStatus(fiber.StatusBadRequest)
+		}
+		return c.JSON(fiber.Map{
+			"message": "Register successfully",
+		})
+	})
+
+	app.Post("/login", func(c *fiber.Ctx) error {
+		user := new(models.User)
+		if err := c.BodyParser(user); err != nil {
+			return c.SendStatus(fiber.StatusBadRequest)
+		}
+
+		token, res := models.LoginUser(db, user)
+		if res != nil {
+			return c.JSON(fiber.Map{
+				"message": &res.Message,
+			})
+		}
+
+		c.Cookie(&fiber.Cookie{
+			Name:     "jwt",
+			Value:    token,
+			Expires:  time.Now().Add(time.Hour * 24),
+			HTTPOnly: true,
+		})
+
+		return c.JSON(fiber.Map{
+			"message": "Login successfully",
 		})
 	})
 
