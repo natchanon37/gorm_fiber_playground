@@ -65,8 +65,37 @@ func main() {
 		fmt.Printf("Error: %#v", err)
 	}
 
-	db.AutoMigrate(&models.Book{}, &models.User{})
+	db.AutoMigrate(&models.Book{}, &models.User{}, &models.Publisher{}, &models.Author{}, &models.AuthorBook{})
 	fmt.Println("Database migrated")
+
+	//Test data with relationship
+	// publisher := models.Publisher{
+	// 	Details: "Publisher Details",
+	// 	Name:    "Publisher 1",
+	// }
+
+	// _ = models.CreatePublisher(db, &publisher)
+
+	// author1 := models.Author{
+	// 	Name: "Author 1",
+	// }
+	// _ = models.CreateAuthor(db, &author1)
+
+	// author2 := models.Author{
+	// 	Name: "Author 2",
+	// }
+	// _ = models.CreateAuthor(db, &author2)
+
+	// book := models.Book{
+	// 	Name:        "Book 2",
+	// 	Author:      "ffffff",
+	// 	Description: "Book 1 Description",
+	// 	PublisherID: publisher.ID,
+	// 	Authors:     []models.Author{author1, author2},
+	// }
+	// _ = models.CreateBookWithAuthor(db, &book)
+
+	//==================================================//
 
 	app := fiber.New()
 	//Middleware
@@ -91,7 +120,7 @@ func main() {
 			return c.Status(400).SendString(err.Error())
 		}
 
-		err := models.CreateBook(db, book)
+		err := models.CreateBookWithAuthor(db, book)
 		if err != nil {
 			return c.SendStatus(fiber.StatusBadRequest)
 		}
